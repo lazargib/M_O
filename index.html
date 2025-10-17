@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Мій пульс</title>
+<style>
+  body { 
+    background: #151233; 
+    color: #ff77ff; 
+    text-align: center; 
+    font-family: Arial; 
+    margin: 0; 
+  }
+  canvas { 
+    background: #151233; 
+    display: block; 
+    margin: 20px auto; 
+  }
+  h2 { 
+    color: #ff77ff; 
+  }
+  button {
+    background: #ff4d88;
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    font-size: 20px;
+    border-radius: 50px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+    animation: pulse 1.5s infinite;
+    box-shadow: 0 0 15px #ff4d88;
+  }
+  button:hover {
+    background: #ff77aa;
+    transform: scale(1.05);
+  }
+  button:disabled {
+    background: #ff3355;
+    animation: none;
+    box-shadow: 0 0 25px #ff3355;
+  }
+  @keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 15px #ff4d88; }
+    50% { transform: scale(1.1); box-shadow: 0 0 25px #ff77aa; }
+    100% { transform: scale(1); box-shadow: 0 0 15px #ff4d88; }
+  }
+</style>
+</head>
+<body>
+
+<h2>Мій пульс, коли Саша Романівна нікуди не йде 💜</h2>
+<canvas id="heartCanvas" width="800" height="400"></canvas>
+
+<button id="playBtn">💔 Тахікардія від Саші</button>
+
+<audio id="music" src="sailor_song.mp3" loop></audio>
+
+<script>
+const canvas = document.getElementById('heartCanvas');
+const ctx = canvas.getContext('2d');
+const music = document.getElementById('music');
+const playBtn = document.getElementById('playBtn');
+
+playBtn.addEventListener('click', () => {
+  music.play();
+  playBtn.disabled = true;
+  playBtn.textContent = "❤️ Інфаркт...";
+});
+
+let points = [];
+let t = 0;
+const speed = 2;
+let pulseValue = 132;
+
+function generateHeartbeat(yBase) {
+    let y = yBase;
+    let pattern = t % 100;
+    let type = Math.floor(t / 100) % 3;
+
+    if(type === 0) {
+        if(pattern < 5) y -= 50;
+        else if(pattern < 15) y += 20;
+        else if(pattern < 25) y -= 10;
+    } else if(type === 1) {
+        if(pattern < 4) y -= 40;
+        else if(pattern < 12) y += 15;
+    } else {
+        if(pattern < 3) y -= 30;
+        else if(pattern < 6) y += 15;
+        else if(pattern < 10) y -= 20;
+    }
+
+    return y;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let y = generateHeartbeat(200);
+    points.push({x: canvas.width-1, y: y});
+
+    for(let p of points) p.x -= speed;
+
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for(let i=1; i<points.length; i++){
+        ctx.lineTo(points[i].x, points[i].y);
+    }
+    ctx.strokeStyle = "#b169ff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    while(points.length && points[0].x < 0) points.shift();
+
+    t++;
+
+    if(t % 50 === 0) pulseValue = 130 + Math.floor(Math.random()*11); // 130-140 BPM
+
+    ctx.save();
+    ctx.translate(550, 300);
+    ctx.fillStyle = "#ff3355";
+    ctx.font = "32px Arial";
+    ctx.fillText(pulseValue + " BPM", 0, 0);
+
+    let heartScale = 1 + 0.2 * Math.sin(t*0.2);
+    ctx.save();
+    ctx.translate(150, 0);
+    ctx.scale(heartScale, heartScale);
+    ctx.fillText("❤️", 0, 0);
+    ctx.restore();
+
+    ctx.restore();
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+</body>
+</html>
+
